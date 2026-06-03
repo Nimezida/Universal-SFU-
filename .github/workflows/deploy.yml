@@ -1,0 +1,29 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main   # Запускается при каждом git push в main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Скачиваем код репозитория
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Подключаемся к серверу по SSH и деплоим
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}       # IP сервера
+          username: ${{ secrets.SERVER_USER }}   # Пользователь (например root)
+          key: ${{ secrets.SSH_PRIVATE_KEY }}    # Приватный SSH-ключ
+          script: |
+            cd /opt/kafedra
+            git pull origin main
+            docker compose pull
+            docker compose up -d --build
+            docker compose ps

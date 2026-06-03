@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+
+  # --- База данных ---
+  db:
+    image: postgres:15
+    container_name: kafedra_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kafedra}
+      POSTGRES_USER: ${POSTGRES_USER:-kafedra_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kafedra_net
+
+  # --- Бэкенд Риты (FastAPI) ---
+  backend:
+    build: ./backend
+    container_name: kafedra_backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kafedra_user}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-kafedra}
+      SECRET_KEY: ${SECRET_KEY:-changeme}
+    depends_on:
+      - db
+    networks:
+      - kafedra_net
+
+  # --- Telegram-бот Максима ---
+  bot:
+    build: ./bot
+    container_name: kafedra_bot
+    restart: always
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - kafedra_net
+
+  # --- Фронтенд Маши (статика через nginx внутри) ---
+  frontend:
+    build: ./frontend
+    container_name: kafedra_frontend
+    restart: always
+    networks:
+      - kafedra_net
+
+  # --- nginx: главный прокси, точка входа ---
+  nginx:
+    image: nginx:alpine
+    container_name: kafedra_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - kafedra_net
+
+volumes:
+  postgres_data:
+
+networks:
+  kafedra_net:
+    driver: bridge
