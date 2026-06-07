@@ -22,7 +22,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}   # Пользователь (например root)
           key: ${{ secrets.SSH_PRIVATE_KEY }}    # Приватный SSH-ключ
           script: |
-            cd /opt/kafedra
+            cd ~/kafedra
             git pull origin main
             docker compose pull
             docker compose up -d --build
