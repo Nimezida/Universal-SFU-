@@ -1,0 +1,9 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/MargaritaUlko/SFU-depatment-app
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/mariakulevam/sfu-ai-dept-web
+[submodule "mobile"]
+	path = mobile
+	url = https://github.com/Wereker/sfu_mobile
